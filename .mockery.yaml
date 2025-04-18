@@ -1,0 +1,9 @@
+all: True
+case: underscore
+exclude:
+  - example
+  - abstract
+  - validation
+  - factory
+  - config/database
+  - types

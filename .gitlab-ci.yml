@@ -1,0 +1,32 @@
+stages:
+  - create_tag
+
+build:
+  stage: create_tag
+  tags:
+    - pvg
+  only:
+    - master
+  before_script:
+    - apk add git
+    - git config --global user.email "${GITLAB_USER_EMAIL}"
+    - git config --global user.name "${GITLAB_USER_NAME}"
+    - git checkout master
+    - git fetch --tags
+    - LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1` || echo "v0.0.0")
+    - echo "latest ${LATEST_TAG}"
+    - NEW_FILES_COUNT=$(echo $(git diff --name-status $CI_COMMIT_SHA | grep '^A' | wc -l))
+  script:
+    - >
+      if [[ "$LATEST_TAG" == "v0.0.0" ]]; then
+        NEW_TAG="v1.0.0"
+      elif [[ "$NEW_FILES_COUNT" == "0" ]]; then
+        NEW_TAG=$(echo $LATEST_TAG | awk -F. '{print "v" substr($1,2) "." $2 "." $3+1}')
+      elif [[ "$NEW_FILES_COUNT" -ge 5 && "$NEW_FILES_COUNT" -lt 10 ]]; then
+        NEW_TAG=$(echo $LATEST_TAG | awk -F. '{print "v" substr($1,2) "." $2+1 ".0"}')
+      else
+        NEW_TAG=$(echo $LATEST_TAG | awk -F. '{print "v" substr($1,2)+1 ".0.0"}')
+      fi;
+    - echo "new ${NEW_TAG}"
+    - git tag $NEW_TAG
+    - git push --tags http://root:$CI_JOB_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_PATH.git master
