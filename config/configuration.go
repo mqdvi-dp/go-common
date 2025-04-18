@@ -68,7 +68,8 @@ func New(serviceName string) Config {
 	DbAutoMigrations()
 
 	if !strings.EqualFold(env.GetString("OPENSEARCH_FLOW_SEND_DATA"), "queue") {
-		logger.OpenSearch()
+		// logger.OpenSearch()
+		logger.Elasticsearch()
 	}
 
 	// start the prometheus server

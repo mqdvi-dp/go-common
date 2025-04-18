@@ -100,7 +100,8 @@ func (l *Logger) logOutput() {
 		if flowSendData == "queue" {
 			sendLogToQueue(l)
 		} else {
-			sendLogDirectly(l)
+			// sendLogDirectly(l)
+			sendLogDirectlyToElasticsearch(l)
 		}
 	}()
 }
@@ -153,6 +154,45 @@ func sendLogDirectly(l *Logger) {
 		return
 	}
 }
+
+func sendLogDirectlyToElasticsearch(l *Logger) {
+	if esClient == nil {
+		logT.Error(fmt.Errorf("esClient variable is nil"))
+		return
+	}
+
+	if esClient.client == nil {
+		logT.Error(fmt.Errorf("elasticsearch client is nil"))
+		return
+	}
+
+	prefixIndexName := env.GetString("ELASTICSEARCH_PREFIX_INDEX", "service_ms_log")
+	indexName := prefixIndexName
+	serverEnv := env.GetString("ENV")
+	if serverEnv != "" && !strings.EqualFold(serverEnv, "production") {
+		indexName += fmt.Sprintf("_%s", strings.ToLower(serverEnv))
+	}
+	indexName += fmt.Sprintf("-%s", time.Now().In(zone.TzJakarta()).Format("20060102"))
+
+	body, _ := convert.InterfaceToBytes(l)
+
+	res, err := esClient.client.Index(indexName,
+		bytes.NewReader(body),
+		esClient.client.Index.WithDocumentID(l.RequestId),
+		esClient.client.Index.WithRefresh("true"),
+		esClient.client.Index.WithContext(context.Background()),
+	)
+	if err != nil {
+		logT.Error(err)
+		return
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		logT.Errorf("failed to index document: %s", res.String())
+	}
+}
+
 
 func sendLogToQueue(l *Logger) {
 	if osc == nil {
