@@ -55,6 +55,8 @@ func Elasticsearch(producer ...sarama.AsyncProducer) {
 		Addresses: hosts,
 		Username:  username,
 		Password:  password,
+		CloudID: env.GetString("ELASTICSEARCH_CLOUD_ID"),
+		APIKey: env.GetString("ELASTICSEARCH_API_KEY"),
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,
