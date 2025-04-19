@@ -70,6 +70,9 @@ func New(serviceName string) Config {
 	if !strings.EqualFold(env.GetString("OPENSEARCH_FLOW_SEND_DATA"), "queue") {
 		// logger.OpenSearch()
 		logger.Elasticsearch()
+	} else {
+		logger.Elasticsearch()
+
 	}
 
 	// start the prometheus server

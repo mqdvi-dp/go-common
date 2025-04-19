@@ -377,6 +377,8 @@ func NewKafkaAsyncPublisher(client sarama.Client) abstract.Publisher {
 	if strings.EqualFold(env.GetString("OPENSEARCH_FLOW_SEND_DATA"), "queue") {
 		// logger.OpenSearch(producer)
 		logger.Elasticsearch(producer)
+	} else {
+		logger.Elasticsearch(producer)
 	}
 
 	logger.GreenItalic("kafka async producer connected!")
